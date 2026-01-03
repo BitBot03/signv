@@ -1,0 +1,7 @@
+{
+  "name": "Sign Glove (SOS v4)",
+  "description": "Sign Glove (Trick Reliable v3) ---------<so this is the final version>\n\n- Sign Glove (SOS v4)\n  - just add the Safety/SOS feature",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
