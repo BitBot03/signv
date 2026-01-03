@@ -129,7 +129,8 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; isConne
 
 // SOS Overlay Component
 const SosOverlay: React.FC<{ contact: string; message: string; onCancel: () => void }> = ({ contact, message, onCancel }) => {
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
+  const [startBar, setStartBar] = useState(false);
   const soundIntervalRef = useRef<any>(null);
 
   useEffect(() => {
@@ -156,6 +157,9 @@ const SosOverlay: React.FC<{ contact: string; message: string; onCancel: () => v
     // Haptic feedback
     if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
 
+    // Start Bar Animation
+    setTimeout(() => setStartBar(true), 100);
+
     const timer = setInterval(() => {
       setCountdown(c => {
         if (c <= 1) {
@@ -173,8 +177,10 @@ const SosOverlay: React.FC<{ contact: string; message: string; onCancel: () => v
   }, []);
 
   const handleSendNow = () => {
+    // Uses window.location.assign for Android Native App feel (stronger than href)
     const encodedMsg = encodeURIComponent(message);
-    window.location.href = `sms:${contact}?body=${encodedMsg}`;
+    // Standard Android/Mobile URI for SMS
+    window.location.assign(`sms:${contact}?body=${encodedMsg}`);
     onCancel();
   };
 
@@ -183,7 +189,7 @@ const SosOverlay: React.FC<{ contact: string; message: string; onCancel: () => v
   }, [countdown]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-danger flex flex-col items-center justify-center p-6 text-white animate-fade-in overflow-hidden">
+    <div className="fixed inset-0 z-[200] bg-danger flex flex-col items-center justify-center p-6 text-white animate-fade-in overflow-hidden select-none">
       <div className="absolute inset-0 bg-black/20 animate-pulse-slow"></div>
       <div className="relative z-10 flex flex-col items-center text-center max-w-md w-full">
          <div className="bg-white/20 p-8 rounded-full mb-8 ring-8 ring-white/10 animate-bounce">
@@ -192,18 +198,22 @@ const SosOverlay: React.FC<{ contact: string; message: string; onCancel: () => v
          <h1 className="text-6xl font-black mb-4 tracking-tighter uppercase italic">SOS TRIGGERED</h1>
          <p className="text-xl font-bold mb-12 opacity-90 leading-tight">Emergency signal requested by friend via remote controller.</p>
          
-         <div className="w-32 h-32 rounded-full border-8 border-white/30 flex items-center justify-center mb-16 relative">
-            <span className="text-5xl font-black">{countdown}</span>
-            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle cx="64" cy="64" r="56" fill="none" stroke="white" strokeWidth="8" strokeDasharray="351.85" strokeDashoffset={351.85 * (1 - countdown/3)} className="transition-all duration-1000 linear" />
-            </svg>
+         <div className="w-full max-w-[280px] flex flex-col items-center mb-16">
+            <span className="text-9xl font-black mb-6 tabular-nums leading-none">{countdown}</span>
+            <div className="w-full h-6 bg-black/30 rounded-full overflow-hidden border-2 border-white/30 backdrop-blur-sm relative">
+                <div 
+                    className={`h-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)] transition-all ease-linear ${startBar ? 'w-full' : 'w-0'}`}
+                    style={{ transitionDuration: '5000ms' }}
+                />
+            </div>
+            <span className="mt-2 text-sm font-bold uppercase tracking-widest opacity-80">Sending Alert...</span>
          </div>
 
          <div className="grid grid-cols-1 gap-4 w-full">
-            <button onClick={handleSendNow} className="bg-white text-danger py-6 rounded-2xl font-black text-2xl shadow-2xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-3">
+            <button onClick={handleSendNow} className="bg-white text-danger py-6 rounded-2xl font-black text-2xl shadow-2xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-3 active:scale-95">
                <PhoneIcon className="w-8 h-8" /> SEND SOS NOW
             </button>
-            <button onClick={onCancel} className="bg-black/30 border border-white/30 py-4 rounded-2xl font-bold text-lg hover:bg-black/50 transition-colors uppercase tracking-widest">
+            <button onClick={onCancel} className="bg-black/30 border border-white/30 py-4 rounded-2xl font-bold text-lg hover:bg-black/50 transition-colors uppercase tracking-widest active:scale-95">
                CANCEL
             </button>
          </div>
@@ -216,7 +226,7 @@ const FakeSerialPicker: React.FC<{ isOpen: boolean; onConnect: () => void; onCan
   const [selected, setSelected] = useState(false);
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] md:items-center md:pt-0 bg-black/20 backdrop-blur-[1px] animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] md:items-center md:pt-0 bg-black/20 backdrop-blur-[1px] animate-fade-in select-none">
       <div className="bg-white rounded-lg shadow-2xl w-[90%] max-w-[400px] overflow-hidden flex flex-col font-sans text-gray-800 animate-slide-up">
         <div className="bg-[#f1f3f4] px-4 py-3 flex items-center gap-3 border-b border-gray-200">
            <span className="text-sm font-medium text-gray-700">signspeak.app wants to connect to a serial port</span>
@@ -245,7 +255,7 @@ const Header: React.FC<{ connectionState: 'disconnected' | 'partial' | 'connecte
   }
 
   return (
-    <header className="flex-none px-6 py-4 flex items-center justify-between border-b border-surface bg-background z-20">
+    <header className="flex-none px-6 py-4 flex items-center justify-between border-b border-surface bg-background z-20 select-none pt-[calc(1rem+env(safe-area-inset-top))] transition-all">
       <div className="flex items-center gap-3">
         <div className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${dotClass}`} />
         <h1 className="text-xl font-bold tracking-tight text-textMain">SignSpeak</h1>
@@ -273,7 +283,7 @@ const SettingsModal: React.FC<{
   
   if (!isOpen) return null;
   return (
-    <div onClick={onClose} className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+    <div onClick={onClose} className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in select-none">
       <div onClick={(e) => e.stopPropagation()} className="bg-surface border border-surfaceHighlight rounded-2xl w-full max-w-sm shadow-2xl p-6 relative animate-slide-up max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute top-4 right-4 text-textMuted hover:text-textMain"><XIcon className="w-5 h-5" /></button>
         <h3 className="text-lg font-bold text-textMain mb-6 flex items-center gap-2 select-none"><div onClick={() => setShowAdvanced(!showAdvanced)} className="cursor-default"><SettingsIcon className="w-5 h-5" /></div>Settings</h3>
@@ -352,7 +362,7 @@ const SettingsModal: React.FC<{
 };
 
 const LiveDisplay: React.FC<{ message: SerialMessage | null }> = ({ message }) => (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden bg-background select-none">
       <div className="relative z-10 w-full text-center h-full flex flex-col justify-center">
         <p className={`text-xs md:text-sm font-medium uppercase tracking-[0.2em] mb-4 md:mb-8 flex-none ${message?.origin === 'user' ? 'text-primary' : 'text-textMuted'}`}>{message?.origin === 'user' ? 'You Said' : 'Detected Sign'}</p>
         {message ? (
@@ -367,7 +377,7 @@ const LiveDisplay: React.FC<{ message: SerialMessage | null }> = ({ message }) =
 );
 
 const HistoryLog: React.FC<{ history: SerialMessage[], onClear: () => void }> = ({ history, onClear }) => (
-    <div className="flex-1 flex flex-col min-h-0 bg-surface/30 lg:bg-transparent overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-surface/30 lg:bg-transparent overflow-hidden select-none">
       <div className="flex items-center justify-between px-6 py-3 border-b border-surfaceHighlight bg-surface/50 lg:bg-transparent backdrop-blur-sm flex-none">
         <div className="flex items-center gap-2 text-textMuted"><HistoryIcon className="w-4 h-4" /><span className="text-xs font-semibold uppercase tracking-wider">Session Log</span></div>
         {history.length > 0 && <button onClick={onClear} className="p-1.5 hover:bg-surfaceHighlight rounded-md text-textMuted hover:text-danger transition-colors"><TrashIcon className="w-4 h-4" /></button>}
@@ -389,7 +399,7 @@ const HistoryLog: React.FC<{ history: SerialMessage[], onClear: () => void }> = 
 );
 
 const ControlBar: React.FC<{ isConnected: boolean; isConnecting: boolean; isSpeaking: boolean; isListening: boolean; onConnect: () => void; onDisconnect: () => void; onToggleSpeech: () => void; onToggleListening: () => void; }> = ({ isConnected, isConnecting, isSpeaking, isListening, onConnect, onDisconnect, onToggleSpeech, onToggleListening }) => (
-  <div className="flex-none p-4 lg:p-6 bg-surface border-t border-surfaceHighlight flex items-center justify-between gap-3 safe-area-bottom z-20">
+  <div className="flex-none p-4 lg:p-6 bg-surface border-t border-surfaceHighlight flex items-center justify-between gap-3 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20 select-none transition-all">
     <div className="flex gap-2">
       <button onClick={onToggleSpeech} className={`p-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 border ${isSpeaking ? 'bg-surfaceHighlight/50 border-surfaceHighlight text-textMain hover:bg-surfaceHighlight' : 'bg-transparent border-surfaceHighlight/50 text-textMuted hover:text-textMain'}`}>{isSpeaking ? <SpeakerOnIcon className="w-6 h-6" /> : <SpeakerOffIcon className="w-6 h-6" />}</button>
       <button onClick={onToggleListening} className={`p-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 border ${isListening ? 'bg-danger/20 border-danger text-danger hover:bg-danger/30 animate-pulse' : 'bg-transparent border-surfaceHighlight/50 text-textMuted hover:text-textMain'}`}>{isListening ? <MicIcon className="w-6 h-6" /> : <MicOffIcon className="w-6 h-6" />}</button>
@@ -534,7 +544,7 @@ const App: React.FC = () => {
 
   // Receiver View
   const renderMainContent = () => (
-    <div className="h-[100dvh] w-full flex flex-col bg-background text-textMain overflow-hidden font-sans">
+    <div className="h-[100dvh] w-full flex flex-col bg-background text-textMain overflow-hidden font-sans select-none">
       <FakeSerialPicker isOpen={showFakePicker} onConnect={onFakeConnectConfirm} onCancel={() => setShowFakePicker(false)} />
       {/* SOS OVERLAY */}
       {isSosActive && <SosOverlay contact={emergencyContact} message={emergencyMessage} onCancel={() => setIsSosActive(false)} />}
@@ -559,7 +569,7 @@ const App: React.FC = () => {
       />
       <CalibrationModal isOpen={isCalibrationOpen} onClose={() => setIsCalibrationOpen(false)} isConnected={effectiveIsConnected} />
       {error && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up w-11/12 max-w-md">
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up w-11/12 max-w-md pt-[env(safe-area-inset-top)]">
           <div className="bg-surface border border-danger/50 text-danger px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between backdrop-blur-md">
             <span className="text-sm font-medium">{error}</span>
             <button onClick={clearError} className="p-1 hover:bg-white/5 rounded"><XIcon className="w-4 h-4" /></button>
@@ -581,8 +591,8 @@ const App: React.FC = () => {
 
   if (!isSupported) {
     return (
-      <div className="h-[100dvh] bg-background flex flex-col items-center justify-center p-6 text-center relative">
-        <button onClick={() => setIsSettingsOpen(true)} className="absolute top-4 right-4 p-2 text-textMuted hover:text-textMain"><SettingsIcon className="w-6 h-6" /></button>
+      <div className="h-[100dvh] bg-background flex flex-col items-center justify-center p-6 text-center relative select-none">
+        <button onClick={() => setIsSettingsOpen(true)} className="absolute top-4 right-4 p-2 text-textMuted hover:text-textMain pt-[calc(1rem+env(safe-area-inset-top))]"><SettingsIcon className="w-6 h-6" /></button>
         <SettingsModal 
           isOpen={isSettingsOpen} 
           onClose={() => setIsSettingsOpen(false)} 
